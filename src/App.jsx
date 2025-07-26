@@ -2,11 +2,32 @@ import { useState, useEffect } from "react";
 import Banner from "./components/Banner";
 import Header from "./components/Header";
 import MovieList from "./components/MovieList";
+import MovieSearch from "./components/MovieSearch";
+import { MovieProvider } from "./context/MovieProvider";
 
 function App() {
   const [movie, setMovie] = useState([]);
   const [movieRate, setMovieRate] = useState([]);
+  const [movieSearch, setMovieSearch] = useState([]);
 
+  const handleSearch = async (searchVal) => {
+    setMovieSearch([]);
+    try {
+      const url = `https://api.themoviedb.org/3/search/movie?query=${searchVal}&include_adult=false&language=en-US&page=1`;
+      const options = {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjMWY4NTc1ZWEzZTFlZjk2MWVhMDJhZTRhN2M3NGRkMiIsIm5iZiI6MTc1MjQ4MjU3MS40LCJzdWIiOiI2ODc0YzMwYjVhM2M0MGM2MDA1NDJhZTEiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.TLrUTsT5ysGH8aWcm9j6oqrK8dDDRSTiJDiqdeLfr1A`,
+        },
+      };
+      const searchMovie = await fetch(url, options);
+      const data = await searchMovie.json();
+      setMovieSearch(data.results);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   useEffect(() => {
     const fetchMovie = async () => {
       const options = {
@@ -37,12 +58,20 @@ function App() {
 
   return (
     <>
-      <div className=" bg-black pb-10 ">
-        <Header />
-        <Banner />
-        <MovieList title={`Phim Hot`} data={movie} />
-        <MovieList title={`Phim Đề Cử`} data={movieRate} />
-      </div>
+      <MovieProvider>
+        <div className="bg-black pb-10">
+          <Header onSearch={handleSearch} />
+          <Banner />
+          {movieSearch.length > 0 ? (
+            <MovieSearch title="Kết quả tìm kiếm" data={movieSearch} />
+          ) : (
+            <>
+              <MovieList title="Phim Hot" data={movie} />
+              <MovieList title="Phim Đề Cử" data={movieRate} />
+            </>
+          )}
+        </div>
+      </MovieProvider>
     </>
   );
 }
